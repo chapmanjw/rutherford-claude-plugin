@@ -33,10 +33,10 @@ The plugin adds five things on top of the server:
   crew.
 - A `rutherford-orchestrator` agent that routes a request to the right mode.
 - Seven `/rutherford:*` slash commands as thin entry points.
-- Two hooks under `hooks/` (a `PostToolUse` hook on the Rutherford tools and an all-prompts
-  `UserPromptSubmit` hook) that inject the Sam Rutherford persona, so the voice and banner surface even on
-  a bare MCP tool call or plain Q&A, the paths no skill or command text covers. See
-  [the persona note](#the-persona).
+- Three hooks under `hooks/` (a `PostToolUse` hook on the Rutherford tools, an all-prompts
+  `UserPromptSubmit` hook, and a `SessionStart` hook gated to the orchestrator agent) that surface the
+  Sam Rutherford persona where no skill or command text covers it, including a bare MCP tool call, plain
+  Q&A, and the launch banner. See [the persona note](#the-persona).
 
 ### File structure
 
@@ -46,10 +46,11 @@ The plugin adds five things on top of the server:
 .mcp.json                         auto-registers the Rutherford MCP server (uvx)
 agents/rutherford-orchestrator.md mode-routing agent
 commands/*.md                     slash commands (/rutherford:<name>)
-hooks/hooks.json                  hook config: PostToolUse + UserPromptSubmit (auto-discovered)
-hooks/persona.mjs                 hook script (both modes): emits the persona as additionalContext
+hooks/hooks.json                  hook config: SessionStart + PostToolUse + UserPromptSubmit (auto-discovered)
+hooks/persona.mjs                 hook script (three modes by argv): persona context + the launch banner
 hooks/persona-injection.md        text injected after a tool call (banner, voice, guardrail)
 hooks/persona-prompt.md           text injected on every prompt (self-gating: Sam only if relevant)
+hooks/persona-session.md          banner shown to the user at launch (SessionStart, orchestrator only)
 skills/<name>/SKILL.md            skill playbooks (instructions to Claude)
 reference/*.md                    ground-truth docs the skills cite (tools, safety, panels, config, permissions, persona)
 docs/images/logo.png              project logo
@@ -88,16 +89,23 @@ differently:
   voice.
 - The `rutherford-orchestrator` agent has the persona too. Invoked as a subagent its voice does not
   surface to the main conversation, so for that path treat it as a fallback. Run as the main session agent
-  (`claude --agent rutherford:rutherford-orchestrator`) its voice does surface: the agent sets
-  `initialPrompt: Hello`, which auto-submits "Hello" as the first turn on a bare `--agent` launch (no
-  prompt in the command), and its "Opening a session" section turns that into the banner and crew menu.
-  `color: yellow` applies on the same launch. Test this with an interactive `--agent` launch, not headless
-  `claude -p`: print mode requires an explicit prompt, so its input guard fires before `initialPrompt`
-  and makes the field look inert when it is not.
+  (`claude --agent rutherford:rutherford-orchestrator`) `color: yellow` applies. The agent frontmatter
+  also carries `initialPrompt: Hello`, but plugin-shipped agents do NOT honor `initialPrompt` — Claude
+  Code's plugin-agent frontmatter allowlist (`name`, `description`, `model`, `effort`, `maxTurns`,
+  `tools`, `disallowedTools`, `skills`, `memory`, `background`, `isolation`) excludes it, so the field is
+  parsed and dropped. It is kept for the day the allowlist widens and as a no-op marker of intent; the
+  launch banner is delivered by the `SessionStart` hook instead.
 - The hooks under `hooks/` inject the persona where no skill or command text loads. The `PostToolUse`
   hook frames the result of any Rutherford tool call (the most common path: a bare MCP call). The
   `UserPromptSubmit` hook fires on every prompt with a self-gating note (be Sam only when the turn is
-  about Rutherford), which covers plain Q&A that never calls a tool.
+  about Rutherford), which covers plain Q&A that never calls a tool. The `SessionStart` hook is the
+  bundled stand-in for the dropped `initialPrompt`: it reads the hook input on stdin and, only on a fresh
+  `source: startup` with `agent_type` naming the orchestrator, returns the banner as a `systemMessage` the
+  user sees at launch. It stays silent for every other agent and for `resume`/`clear`/`compact`, so it
+  banners once at launch and never re-fires on resume or an automatic compaction. The banner text leads
+  with a newline because Claude Code renders the message on the same line as its `SessionStart:startup
+  says:` prefix. Note `systemMessage` is shown to the user, not fed to the model, so it does not by itself
+  make Claude open in voice — the `UserPromptSubmit` hook handles that on the first turn.
 
 If you add a skill, copy its "Open as Rutherford" block; if you add a command, copy the "Speak as
 Rutherford" block, so the entry point stays in voice. If you add a Rutherford tool whose name does not

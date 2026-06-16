@@ -4,6 +4,25 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.3] - 2026-06-16
+
+### Added
+
+- A `SessionStart` hook (in `hooks/hooks.json`, handled by `hooks/persona.mjs`) shows the Rutherford
+  banner to the user at launch. It reads the hook input on stdin and self-gates: it fires only on a
+  fresh `source: startup` with `agent_type` naming the orchestrator, returning the banner as a
+  `systemMessage`. It stays silent for every other agent and for `resume`, `/clear`, and automatic
+  compaction, so it banners once at launch and never re-fires mid-session. New `hooks/persona-session.md`
+  holds the banner text.
+
+### Fixed
+
+- The launch banner now actually surfaces for the plugin-shipped `rutherford-orchestrator` agent. Claude
+  Code does not honor `initialPrompt` on plugin agents (the field sits outside the plugin-agent
+  frontmatter allowlist), so the auto-greet documented in 0.2.1 never fired; the `SessionStart` hook is
+  the bundled replacement. The `initialPrompt: Hello` frontmatter is kept as a no-op marker of intent for
+  the day the allowlist widens. `CLAUDE.md` is corrected to describe this.
+
 ## [0.2.2] - 2026-06-15
 
 ### Changed
