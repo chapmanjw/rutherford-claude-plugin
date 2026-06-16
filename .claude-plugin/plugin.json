@@ -1,6 +1,6 @@
 {
   "name": "rutherford",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Give your AI coding agent a crew. Drives Claude Code, Codex, Cursor, Goose and more over ACP for delegation, consensus, debate, and review.",
   "author": {
     "name": "chapmanjw"

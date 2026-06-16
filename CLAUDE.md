@@ -91,7 +91,7 @@ differently:
   (`claude --agent rutherford:rutherford-orchestrator`) its voice does surface: the agent sets
   `initialPrompt: Hello`, which auto-submits "Hello" as the first turn on a bare `--agent` launch (no
   prompt in the command), and its "Opening a session" section turns that into the banner and crew menu.
-  `color: cyan` applies on the same launch. Test this with an interactive `--agent` launch, not headless
+  `color: yellow` applies on the same launch. Test this with an interactive `--agent` launch, not headless
   `claude -p`: print mode requires an explicit prompt, so its input guard fires before `initialPrompt`
   and makes the field look inert when it is not.
 - The hooks under `hooks/` inject the persona where no skill or command text loads. The `PostToolUse`

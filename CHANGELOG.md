@@ -4,6 +4,14 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-06-15
+
+### Changed
+
+- The `rutherford-orchestrator` agent's `color` is now `yellow` (was `cyan`), and the inline comment
+  documenting the `initialPrompt: Hello` auto-greet is dropped from its frontmatter (the behavior is
+  still documented in `CLAUDE.md`).
+
 ## [0.2.1] - 2026-06-15
 
 ### Added
@@ -86,6 +94,7 @@ Initial release.
   match and publishes a GitHub Release from the changelog on a `vX.Y.Z` tag.
 - Passive usage badges (PyPI downloads, version, stars) with a note that the plugin emits no telemetry.
 
+[0.2.2]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.2
 [0.2.1]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.1
 [0.2.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.1.0

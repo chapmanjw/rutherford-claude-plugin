@@ -9,7 +9,7 @@
     {
       "name": "rutherford",
       "source": "./",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "description": "Auto-registers the Rutherford MCP server (via uvx) and ships skills, an orchestrator agent, and slash commands for setup, panels, delegation, consensus, debate, and code review.",
       "category": "development",
       "keywords": [
