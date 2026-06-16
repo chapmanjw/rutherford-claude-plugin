@@ -86,8 +86,14 @@ differently:
 - Skills carry an "Open as Rutherford" heading block with the banner; slash commands carry an equivalent
   "Speak as Rutherford" block. Either way, an explicitly invoked skill or `/rutherford:*` command opens in
   voice.
-- The `rutherford-orchestrator` agent has the persona too, but it runs as a subagent, so its voice does
-  not surface to the main conversation. Treat it as a fallback, not the main delivery path.
+- The `rutherford-orchestrator` agent has the persona too. Invoked as a subagent its voice does not
+  surface to the main conversation, so for that path treat it as a fallback. Run as the main session agent
+  (`claude --agent rutherford:rutherford-orchestrator`) its voice does surface: the agent sets
+  `initialPrompt: Hello`, which auto-submits "Hello" as the first turn on a bare `--agent` launch (no
+  prompt in the command), and its "Opening a session" section turns that into the banner and crew menu.
+  `color: cyan` applies on the same launch. Test this with an interactive `--agent` launch, not headless
+  `claude -p`: print mode requires an explicit prompt, so its input guard fires before `initialPrompt`
+  and makes the field look inert when it is not.
 - The hooks under `hooks/` inject the persona where no skill or command text loads. The `PostToolUse`
   hook frames the result of any Rutherford tool call (the most common path: a bare MCP call). The
   `UserPromptSubmit` hook fires on every prompt with a self-gating note (be Sam only when the turn is

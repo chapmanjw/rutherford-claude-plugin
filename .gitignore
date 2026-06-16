@@ -1,3 +1,5 @@
+.tmp
+
 # Secrets and local env — never commit (this plugin ships no secrets, kept as defense-in-depth)
 .env
 .env.*

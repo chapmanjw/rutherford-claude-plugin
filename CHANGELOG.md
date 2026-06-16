@@ -4,6 +4,25 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.1] - 2026-06-15
+
+### Added
+
+- The `rutherford-orchestrator` agent sets `initialPrompt: Hello`, so a bare
+  `claude --agent rutherford:rutherford-orchestrator` launch (no prompt in the command) auto-submits
+  "Hello" and opens on the crew menu.
+- An "Opening a session" section in the agent body: it leads with the banner and crew menu on a
+  greeting-only first turn, and routes immediately when the first turn already carries a task (so the
+  prepended `Hello` does not derail routing).
+- README documents running a whole Claude session as the orchestrator with the `--agent` flag, as a
+  getting-started step after install (both in the install block and the Agent section).
+
+### Changed
+
+- `CLAUDE.md` persona section now documents the `--agent` launch behavior (`initialPrompt` auto-greet and
+  `color`), and notes that headless `claude -p` needs an explicit prompt and is not a valid way to test
+  it.
+
 ## [0.2.0] - 2026-06-15
 
 ### Added
@@ -67,5 +86,6 @@ Initial release.
   match and publishes a GitHub Release from the changelog on a `vX.Y.Z` tag.
 - Passive usage badges (PyPI downloads, version, stars) with a note that the plugin emits no telemetry.
 
+[0.2.1]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.1
 [0.2.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.1.0

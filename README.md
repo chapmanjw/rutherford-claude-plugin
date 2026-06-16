@@ -38,6 +38,18 @@ Hand work to one agent, ask several in parallel, or have them argue it out.
 Then restart Claude Code. The skills appear under `/rutherford:*`, the `rutherford-orchestrator` agent
 becomes available, and the Rutherford MCP server is registered automatically.
 
+After installing, you can run a whole Claude session as the orchestrator. Start Claude with the agent
+flag and no prompt:
+
+```
+claude --agent rutherford:rutherford-orchestrator
+```
+
+Sam opens on the crew menu automatically, health-checks the crew with `doctor`, and routes each request
+to the right mode (`delegate`, `consensus`, `debate`, `review`, or `plan`). Pass a task on the command
+line instead and he routes it straight away. In an ordinary Claude Code session the same agent is also
+available as a subagent for a "just use Rutherford for this" ask.
+
 ## What this plugin is
 
 Rutherford gives your coding agent a crew. This is the Claude Code-facing piece: it auto-registers the
@@ -123,7 +135,9 @@ Driving the crew:
 
 `rutherford-orchestrator` — health-checks the crew with `doctor`, then routes a request to the right
 mode: `delegate`, `consensus`, `debate`, `review`, or `plan`. Use it for a "just use Rutherford for
-this" ask, or for a fresh, independent multi-agent take on your own work.
+this" ask, or for a fresh, independent multi-agent take on your own work. Run an entire session as this
+agent with `claude --agent rutherford:rutherford-orchestrator`, or invoke it as a subagent from any
+session.
 
 ### Slash commands
 
