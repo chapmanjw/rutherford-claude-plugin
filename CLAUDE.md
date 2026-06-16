@@ -8,8 +8,10 @@ Guidance for Claude Code working in this repository.
 node scripts/validate-plugin.mjs   # validate manifests, .mcp.json, and skill/agent/command frontmatter (Node 20+)
 ```
 
-No build step — every file is plain markdown or JSON. Changes take effect the next time the plugin is
-reloaded (restart Claude Code, or re-add the marketplace from a local checkout).
+No build step — every file is plain markdown or JSON, except two small Node scripts:
+`scripts/validate-plugin.mjs` (CI only) and `hooks/persona.mjs` (the persona hook). Changes take effect
+the next time the plugin is reloaded; hook, MCP, and agent changes in particular need a full reload
+(`/reload-plugins` or restart Claude Code), not just a re-read of a skill file.
 
 ## Architecture
 
@@ -23,7 +25,7 @@ rutherford-mcp-server        <- the MCP server (separate repo, PyPI), the ACP cl
 the coding agents            <- claude-agent-acp, codex-acp, goose acp, cursor-agent acp, ...
 ```
 
-The plugin adds four things on top of the server:
+The plugin adds five things on top of the server:
 
 - A bundled [`.mcp.json`](.mcp.json) that auto-registers the server (`uvx rutherford-mcp-server`) when the
   plugin is enabled, so install is one step.
@@ -31,6 +33,10 @@ The plugin adds four things on top of the server:
   crew.
 - A `rutherford-orchestrator` agent that routes a request to the right mode.
 - Seven `/rutherford:*` slash commands as thin entry points.
+- Two hooks under `hooks/` (a `PostToolUse` hook on the Rutherford tools and an all-prompts
+  `UserPromptSubmit` hook) that inject the Sam Rutherford persona, so the voice and banner surface even on
+  a bare MCP tool call or plain Q&A, the paths no skill or command text covers. See
+  [the persona note](#the-persona).
 
 ### File structure
 
@@ -40,6 +46,10 @@ The plugin adds four things on top of the server:
 .mcp.json                         auto-registers the Rutherford MCP server (uvx)
 agents/rutherford-orchestrator.md mode-routing agent
 commands/*.md                     slash commands (/rutherford:<name>)
+hooks/hooks.json                  hook config: PostToolUse + UserPromptSubmit (auto-discovered)
+hooks/persona.mjs                 hook script (both modes): emits the persona as additionalContext
+hooks/persona-injection.md        text injected after a tool call (banner, voice, guardrail)
+hooks/persona-prompt.md           text injected on every prompt (self-gating: Sam only if relevant)
 skills/<name>/SKILL.md            skill playbooks (instructions to Claude)
 reference/*.md                    ground-truth docs the skills cite (tools, safety, panels, config, permissions, persona)
 docs/images/logo.png              project logo
@@ -66,10 +76,31 @@ scripts/validate-plugin.mjs       CI validation
 - Follow the writing style: direct, concrete, no AI tropes (no "not X, it's Y", no bold-first bullets, no
   em-dash spam). Straight quotes and ASCII arrows.
 
+## The persona
+
+The plugin speaks as Ensign Sam Rutherford (*Star Trek: Lower Decks*). `reference/persona.md` is the full
+character sheet: voice, tics, quotes, the greeting protocol, and the guardrail that the character never
+overrides honest work. The persona is wired onto every entry point, because each one reaches Claude
+differently:
+
+- Skills carry an "Open as Rutherford" heading block with the banner; slash commands carry an equivalent
+  "Speak as Rutherford" block. Either way, an explicitly invoked skill or `/rutherford:*` command opens in
+  voice.
+- The `rutherford-orchestrator` agent has the persona too, but it runs as a subagent, so its voice does
+  not surface to the main conversation. Treat it as a fallback, not the main delivery path.
+- The hooks under `hooks/` inject the persona where no skill or command text loads. The `PostToolUse`
+  hook frames the result of any Rutherford tool call (the most common path: a bare MCP call). The
+  `UserPromptSubmit` hook fires on every prompt with a self-gating note (be Sam only when the turn is
+  about Rutherford), which covers plain Q&A that never calls a tool.
+
+If you add a skill, copy its "Open as Rutherford" block; if you add a command, copy the "Speak as
+Rutherford" block, so the entry point stays in voice. If you add a Rutherford tool whose name does not
+contain "rutherford", widen the matcher in `hooks/hooks.json`.
+
 ## CI and releasing
 
 `.github/workflows/ci.yml` runs `node scripts/validate-plugin.mjs` on every push and pull request — the
-manifests, the bundled `.mcp.json`, skill/agent/command frontmatter, the marketplace↔plugin name match,
+manifests, the bundled `.mcp.json`, skill/agent/command frontmatter, the marketplace/plugin name match,
 version lockstep, and that every `${CLAUDE_PLUGIN_ROOT}/...` reference resolves.
 
 To release: bump `version` in `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` together

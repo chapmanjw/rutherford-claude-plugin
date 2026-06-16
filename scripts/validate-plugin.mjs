@@ -152,6 +152,56 @@ for (const file of walkMarkdown(root)) {
   }
 }
 
+// --- hooks (plugin event handlers) ---
+// hooks/hooks.json is auto-discovered when present. Validate its shape, that handlers use the
+// supported "command" type, and that any ${CLAUDE_PLUGIN_ROOT}/... path it runs resolves on disk
+// (the markdown scan above does not cover JSON, so the hook's script reference is checked here).
+const hooksRel = "hooks/hooks.json";
+if (existsSync(join(root, hooksRel))) {
+  const hooksCfg = readJson(hooksRel);
+  if (hooksCfg && (!hooksCfg.hooks || typeof hooksCfg.hooks !== "object")) {
+    fail(`${hooksRel}: missing top-level "hooks" object`);
+  } else if (hooksCfg) {
+    for (const [event, entries] of Object.entries(hooksCfg.hooks)) {
+      if (!Array.isArray(entries)) {
+        fail(`${hooksRel}: "${event}" must be an array`);
+        continue;
+      }
+      for (const entry of entries) {
+        if (entry === null || typeof entry !== "object") {
+          fail(`${hooksRel}: a ${event} entry is not an object`);
+          continue;
+        }
+        // A matcher is optional (events like UserPromptSubmit fire on every prompt with none); when
+        // present it must be a string.
+        if (entry.matcher !== undefined && typeof entry.matcher !== "string") {
+          fail(`${hooksRel}: a ${event} entry "matcher" must be a string when present`);
+        }
+        if (!Array.isArray(entry.hooks)) {
+          fail(`${hooksRel}: a ${event} entry is missing a "hooks" array`);
+          continue;
+        }
+        for (const h of entry.hooks) {
+          if (h.type !== "command") {
+            fail(`${hooksRel}: ${event} handler type "${h.type}" is unsupported (expected "command")`);
+          }
+          const strings = [h.command, ...(Array.isArray(h.args) ? h.args : [])].filter(
+            (s) => typeof s === "string",
+          );
+          for (const s of strings) {
+            for (const m of s.matchAll(PLUGIN_ROOT_REF)) {
+              const ref = m[1].replace(/[).,;:"]+$/, "");
+              if (!existsSync(join(root, ref))) {
+                fail(`${hooksRel}: hook reference \${CLAUDE_PLUGIN_ROOT}/${ref} does not exist`);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 // --- report ---
 for (const w of warnings) console.warn(`! ${w}`);
 if (errors.length) {
@@ -160,5 +210,5 @@ if (errors.length) {
   process.exit(1);
 }
 console.log(
-  `✓ plugin, marketplace, MCP config, skills (${skillNames.size}), agents, commands, and bundled references are valid`,
+  `✓ plugin, marketplace, MCP config, skills (${skillNames.size}), agents, commands, hooks, and bundled references are valid`,
 );

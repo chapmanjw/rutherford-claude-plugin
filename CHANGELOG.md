@@ -4,6 +4,35 @@ All notable changes to this plugin are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2026-06-15
+
+### Added
+
+- A `PostToolUse` hook (`hooks/hooks.json` + `hooks/persona.mjs`) that injects the Sam Rutherford
+  persona next to the result of any Rutherford MCP tool call. This is what makes the voice and the ASCII
+  banner show up on a bare tool call, where no skill or slash command text loads. The regex matcher
+  `mcp__.*rutherford.*` catches both the hand-registered (`mcp__rutherford__*`) and plugin-bundled
+  (`mcp__plugin_rutherford_rutherford__*`) tool names.
+- A `UserPromptSubmit` hook (the same `hooks/persona.mjs`, run in its prompt mode) that injects a
+  self-gating note on every prompt: be Sam when the turn is about Rutherford, otherwise ignore it. This
+  covers plain Q&A about Rutherford that never calls a tool, and puts the voice in front of the first
+  reply rather than only after the first tool result.
+- The Rutherford persona on all seven slash commands, so `/rutherford:*` opens in his voice and banner
+  the way the skills already did.
+
+### Changed
+
+- The skill persona block now tells Claude to stay in voice when reporting a tool's result, not only
+  when first greeting.
+- `scripts/validate-plugin.mjs` validates `hooks/hooks.json`: its shape, the supported `command` handler
+  type, and that its `${CLAUDE_PLUGIN_ROOT}/...` references resolve.
+
+### Fixed
+
+- The persona reached only the skills (which load on explicit invocation) and the orchestrator agent
+  (whose voice does not surface to the main conversation), so direct MCP tool calls and slash commands
+  came back in plain Claude voice with no banner. Coverage now reaches every entry point.
+
 ## [0.1.0] - 2026-06-15
 
 Initial release.
@@ -38,4 +67,5 @@ Initial release.
   match and publishes a GitHub Release from the changelog on a `vX.Y.Z` tag.
 - Passive usage badges (PyPI downloads, version, stars) with a note that the plugin emits no telemetry.
 
+[0.2.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/chapmanjw/rutherford-claude-plugin/releases/tag/v0.1.0

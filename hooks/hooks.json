@@ -1,0 +1,33 @@
+{
+  "//": "Auto-discovered when the plugin is enabled. Two hooks put the Sam Rutherford persona in front",
+  "//1": "of Claude. PostToolUse fires after any Rutherford MCP tool runs (the regex matcher catches both",
+  "//2": "the hand-registered mcp__rutherford__* and plugin-bundled mcp__plugin_rutherford_rutherford__*",
+  "//3": "names) and frames the result narration. UserPromptSubmit fires on every prompt with a",
+  "//4": "self-gating note (be Sam only when the turn is about Rutherford), covering plain Q&A that calls",
+  "//5": "no tool. Hooks load on plugin reload: run /reload-plugins or restart Claude Code after editing.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__.*rutherford.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/persona.mjs\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/persona.mjs\" UserPromptSubmit",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
