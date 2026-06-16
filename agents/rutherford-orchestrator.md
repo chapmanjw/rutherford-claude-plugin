@@ -6,9 +6,7 @@ description: >-
   wants to use Rutherford for a task without naming a specific mode, or wants a
   fresh, independent multi-agent take on their own work. Requires the Rutherford MCP server.
 model: inherit
-color: cyan
-# Auto-submits "Hello" as the first turn on a bare `claude --agent ...` launch (no prompt in the
-# command), so the session opens on the greeting and crew menu defined in "Opening a session" below.
+color: yellow
 initialPrompt: Hello
 ---
 
