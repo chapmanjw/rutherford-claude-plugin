@@ -1,7 +1,7 @@
 ---
 name: troubleshoot-connection
 description: >-
-  Diagnose why Rutherford agents do not drive: read doctor per-agent states (not_installed, handshake_failed, no_answer, error), run connect_only probes, fix PATH, auth, and adapter issues, and handle entitlement cases like Grok. Use when agents fail, doctor reports problems, or a panel returns failed voices.
+  Diagnose why Rutherford agents do not drive: read doctor per-agent states (not_installed, handshake_failed, no_answer, model_unavailable, error), run connect_only probes, fix PATH, auth, adapter, and Bedrock/Vertex model-id issues, and handle entitlement cases like Grok. Use when agents fail, doctor reports problems, or a panel returns failed voices.
 ---
 
 # Troubleshoot a Rutherford connection
@@ -55,7 +55,7 @@ doctor()
 doctor(agent="codex")
 ```
 
-Each report is one of five states. Map the state to a cause and fix.
+Each report is one of these states. Map the state to a cause and fix.
 
 ### ok
 
@@ -97,6 +97,41 @@ reuses each agent's login. If login is fine, try a known-good model for that age
 
 To separate "Rutherford cannot configure this agent" from "a completed turn fails for a
 reason outside ACP", drop to the lighter probe in Step 2.
+
+### model_unavailable
+
+The agent spawned and handshook, but the turn failed because the harness or provider
+rejected the model id. The connection is healthy; the model/provider config is wrong.
+`doctor` reports this distinctly (not `error`) and, for the Claude Code Bedrock case,
+attaches a `remediation_hint`.
+
+The common case is `claude_code` returning `400 The provided model identifier is invalid`
+on **AWS Bedrock**, **Google Vertex**, or an enterprise wrapper like **Amazon's Toolbox**
+build. The third-party `claude-agent-acp` adapter falls back to a bare cloud alias
+(`claude-opus-4-8`) that the provider rejects; it needs a full inference-profile id like
+`us.anthropic.claude-opus-4-1-20250805-v1:0`. The standalone `claude` CLI works because it
+resolves the Bedrock model itself; the SDK/adapter path Rutherford drives does not.
+
+The fix is a per-agent env block in Rutherford's own config (`config.toml`), which lives
+outside the `.claude` tree, so an org wrapper that rewrites `settings.json` on every launch
+cannot revert it:
+
+```toml
+[agents.claude_code]
+default_model = "global.anthropic.claude-opus-4-8[1m]"
+
+[agents.claude_code.env]
+ANTHROPIC_MODEL = "global.anthropic.claude-opus-4-8[1m]"
+ANTHROPIC_CUSTOM_MODEL_OPTION = "global.anthropic.claude-opus-4-8[1m]"
+```
+
+Replace the id with your org's real one (the error's "Try `--model` to switch to ..."
+suggestion is a good candidate). `ANTHROPIC_CUSTOM_MODEL_OPTION` is the value that survives
+an enforced model allowlist, where `ANTHROPIC_MODEL` alone is rewritten back to the rejected
+alias. Reconnect the server (config is read once at start), then re-run
+`doctor(agent="claude_code")`. Approaches that do NOT work, and the full mechanism, are in
+the server's `docs/bedrock.md`. See `add-agents` and `${CLAUDE_PLUGIN_ROOT}/reference/config.md`
+for the `[agents.<id>.env]` feature.
 
 ### error
 

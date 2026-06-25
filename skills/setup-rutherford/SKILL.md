@@ -74,6 +74,11 @@ drive on this machine, not just which are registered. Each agent comes back in o
 
 - `ok` — handshake succeeded and the agent answered. This agent is usable.
 - `no_answer` — connected but returned nothing usable.
+- `model_unavailable` — reachable, but the provider rejected the model id. The seat is healthy; the
+  model/provider config is wrong. The report carries a `remediation_hint` — surface it. The common case is
+  `claude_code` on AWS Bedrock / Google Vertex or an enterprise wrapper (Amazon Toolbox) returning
+  `400 The provided model identifier is invalid`; the fix is a `[agents.claude_code.env]` block, walked by
+  the `troubleshoot-connection` skill.
 - `handshake_failed` — the ACP handshake did not complete.
 - `not_installed` — the agent's CLI is not on this machine.
 - `error` — some other failure; the report carries the detail.
@@ -83,8 +88,8 @@ the registered roster without paying for round trips, call `capabilities` instea
 snapshot (id, display name, launch command, provider).
 
 Rutherford never installs or signs in to an agent; it reuses each agent's own login. If an agent the
-user expects shows `not_installed` or `handshake_failed`, point them at the `troubleshoot-connection`
-skill.
+user expects shows `not_installed`, `handshake_failed`, or `model_unavailable` (the Bedrock/Vertex/Toolbox
+case), point them at the `troubleshoot-connection` skill.
 
 ## 3. Install missing npm ACP adapters
 
