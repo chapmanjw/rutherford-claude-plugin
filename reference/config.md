@@ -108,6 +108,31 @@ beside the global config or in the project's `.rutherford/`, folding in its `age
 workspace already configured for Zed or Cline reuses that config. Native TOML wins over an imported
 `acp.json` at the same scope.
 
+### Per-agent environment: `[agents.<id>.env]`
+
+`[agents.<id>.env]` sets environment variables for that one agent's subprocess, layered on top of the
+inherited environment. Because it lives in Rutherford's own config — outside the `.claude` tree — it
+survives an enterprise wrapper that rewrites `~/.claude/settings.json` on every launch.
+
+The canonical use is a Claude Code seat on **AWS Bedrock**, **Google Vertex**, or an enterprise wrapper
+like **Amazon's Toolbox** build, where a turn fails with `400 The provided model identifier is invalid`.
+Pin a valid provider model id for the seat:
+
+```toml
+[agents.claude_code]
+default_model = "global.anthropic.claude-opus-4-8[1m]"
+
+[agents.claude_code.env]
+ANTHROPIC_MODEL = "global.anthropic.claude-opus-4-8[1m]"
+ANTHROPIC_CUSTOM_MODEL_OPTION = "global.anthropic.claude-opus-4-8[1m]"
+```
+
+Replace the id with your org's real one. `ANTHROPIC_CUSTOM_MODEL_OPTION` is the value that survives an
+enforced model allowlist (where `ANTHROPIC_MODEL` alone is rewritten back to the rejected alias). Reconnect
+the server after editing config. The full mechanism, the approaches that do not work, and how `doctor`
+flags this case are in the Rutherford repo's `docs/bedrock.md`; the `troubleshoot-connection` skill walks
+the fix.
+
 ## Roles
 
 A role is a named persona whose text is prepended to your prompt. Pass `role="<id>"` to `delegate` /
