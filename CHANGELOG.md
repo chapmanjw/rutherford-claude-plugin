@@ -6,6 +6,8 @@ All notable changes to this plugin are documented here. The format follows
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-06-25
+
 ### Added
 
 - **Bedrock / Vertex / enterprise-wrapper troubleshooting for `claude_code`.** The `troubleshoot-connection`
